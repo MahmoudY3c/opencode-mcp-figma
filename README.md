@@ -5,6 +5,8 @@
 Figma MCP rejects non-whitelisted agents, including OpenCode.
 This almost no-dependncy code allows to authenticate and create the mcp-auth.json file.
 
+For context and alternatives, see https://github.com/anomalyco/opencode/issues/988
+
 ## Authenticating
 
 ```bash
