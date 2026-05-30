@@ -42,23 +42,24 @@ Move or merge this file to `~/.local/share/opencode/mcp-auth.json` for use with 
 
 ## Vendor Instructions
 
-The `vendor_instructions/` directory contains curated usage guides for each MCP server's tools. These provide agents with detailed patterns (URL parsing, edge cases, tool selection priorities) that aren't available from raw MCP tool schemas. Wire them into opencode via the `instructions` field on the MCP server entry in `opencode.json`:
+The `vendor_instructions/` directory contains curated usage guides for each MCP server's tools. These provide agents with detailed patterns (URL parsing, edge cases, tool selection priorities) that aren't available from raw MCP tool schemas.
 
-```json
-{
-  "mcpServers": {
-    "figma": {
-      "url": "https://mcp.figma.com/mcp",
-      "auth": {
-        "type": "oauth"
-      },
-      "instructions": "vendor_instructions/figma_instructions.md"
-    }
-  }
-}
+To make opencode agents use these instructions when working with Figma, create a skill:
+
+```
+.opencode/skills/figma-vendor/SKILL.md
 ```
 
-When set, opencode injects the instructions into the agent's system prompt whenever that server is available, significantly improving tool usage correctness.
+```markdown
+---
+name: figma-vendor
+description: Use when working with Figma MCP tools including get_screenshot, get_design_context, use_figma, generate_figma_design, get_metadata, get_figjam, search_design_system, get_libraries, and other Figma design-to-code or FigJam tools.
+---
+
+[Copy the contents of vendor_instructions/figma_instructions.md here]
+```
+
+opencode scans `.opencode/skills/` for skills and loads them automatically based on the `description` matching the task at hand, so the agent gets the right instructions when working with Figma.
 
 ## Supported MCP Servers
 
