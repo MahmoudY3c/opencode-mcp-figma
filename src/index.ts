@@ -1,10 +1,13 @@
 import { createServer, type Server } from "node:http";
+import { writeFileSync } from "node:fs";
+import path from "node:path";
 import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import express from "express";
 import { type McpOAuthConfig, McpOAuthProvider } from "./oauth-provider";
 import { askClientInfo, askMcpServerUrl } from "./utils/prompts.utils";
+import { saveToolInstructions } from "./utils/instructions.utils";
 
 const CALLBACK_PORT = 3000;
 const OAUTH_CALLBACK_PATH = "/callback";
@@ -105,8 +108,7 @@ async function main() {
   const mcpServerUrl = await askMcpServerUrl();
   const { mcpClientName, mcpClientVersion } = await askClientInfo();
   if (!mcpServerUrl) {
-    console.error("Usage: ts-node src/index.ts <mcp-server-url>");
-    console.error("  Example: ts-node src/index.ts https://example.com/mcp");
+    console.error("Please provide the MCP server URL.");
     process.exit(1);
   }
 
@@ -141,6 +143,9 @@ async function main() {
         );
       }
     }
+
+    // Save tool instructions to file for agent context
+    await saveToolInstructions(client, mcpServerUrl);
   } finally {
     if (client) {
       await client.close();
