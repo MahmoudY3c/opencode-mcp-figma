@@ -40,6 +40,26 @@ The tool generates an `mcp-auth.json` file containing:
 
 Move or merge this file to `~/.local/share/opencode/mcp-auth.json` for use with OpenCode or other MCP clients.
 
+## Vendor Instructions
+
+The `vendor_instructions/` directory contains curated usage guides for each MCP server's tools. These provide agents with detailed patterns (URL parsing, edge cases, tool selection priorities) that aren't available from raw MCP tool schemas. Wire them into opencode via the `instructions` field on the MCP server entry in `opencode.json`:
+
+```json
+{
+  "mcpServers": {
+    "figma": {
+      "url": "https://mcp.figma.com/mcp",
+      "auth": {
+        "type": "oauth"
+      },
+      "instructions": "vendor_instructions/figma_instructions.md"
+    }
+  }
+}
+```
+
+When set, opencode injects the instructions into the agent's system prompt whenever that server is available, significantly improving tool usage correctness.
+
 ## Supported MCP Servers
 
 Tested and working with:
