@@ -47,13 +47,23 @@ export async function saveToolInstructions(
     );
 
     console.log(`\n[MCP] Tool instructions saved to: ${outputPath}`);
-    console.log(
-      "[MCP] This file provides context for agents working with this MCP server.",
-    );
+    console.log(`[MCP] SKILL file created at: ${skillOutputPath}`);
 
-    console.log(`\n[MCP] SKILL file created at: ${skillOutputPath}`);
+    console.log(`\n[MCP] Recommended next steps:`);
     console.log(
-      "[MCP] This file provides context for agents working with this MCP server and can be used as a skill in agent frameworks.",
+      `  To use as an OpenCode skill, symlink into your config:`,
+    );
+    console.log(
+      `    ln -sf "$(pwd)/skills/${vendor}-tools" ~/.config/opencode/skills/${vendor}-tools`,
+    );
+    console.log(
+      `  Or copy it:`,
+    );
+    console.log(
+      `    cp -r skills/${vendor}-tools ~/.config/opencode/skills/${vendor}-tools`,
+    );
+    console.log(
+      `  OpenCode will auto-load the skill when the task description matches.`,
     );
   }
 

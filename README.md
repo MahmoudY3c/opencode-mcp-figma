@@ -1,8 +1,6 @@
 # MCP OAuth Authentication
 
-## What is it for?
-
-This tool handles OAuth authentication for Model Context Protocol (MCP) servers. It manages the OAuth flow, handles authorization callbacks, stores credentials securely, and verifies successful connection by listing available tools.
+This tool handles OAuth authentication for Model Context Protocol (MCP) servers,  It manages the OAuth flow, handles authorization callbacks, stores credentials securely, and verifies successful connection by listing available tools. and auto-generate agent-ready tool instructions and skills.
 
 ## How it works
 
@@ -11,8 +9,9 @@ This tool handles OAuth authentication for Model Context Protocol (MCP) servers.
 3. Handles authorization code exchange and token management
 4. Saves authentication credentials to `mcp-auth.json`
 5. Lists available tools to verify the connection
+6. Generates tool instructions and skill files in `vendor_tools/` and `skills/`
 
-## Getting started
+## Quick start
 
 ```bash
 npm install
@@ -20,6 +19,7 @@ npm run dev
 ```
 
 You'll be prompted to enter:
+
 - **MCP Server URL**: The OAuth endpoint (e.g., `https://mcp.figma.com/mcp`)
 - **Client Name**: Optional custom client name (defaults to "Codex")
 - **Client Version**: Optional custom client version (defaults to "1.0.0")
@@ -33,37 +33,46 @@ npm start
 
 ## Credentials
 
-The tool generates an `mcp-auth.json` file containing:
+Authentication state is stored in `mcp-auth.json` at the project root, containing:
+
 - OAuth client information (ID, secret)
 - Access and refresh tokens
 - Token expiration timestamps
 
 Move or merge this file to `~/.local/share/opencode/mcp-auth.json` for use with OpenCode or other MCP clients.
 
-## Vendor Instructions
+## Generated outputs
 
-The `vendor_instructions/` directory contains curated usage guides for each MCP server's tools. These provide agents with detailed patterns (URL parsing, edge cases, tool selection priorities) that aren't available from raw MCP tool schemas.
+After a successful OAuth flow, the tool generates two types of output:
 
-To make opencode agents use these instructions when working with Figma, create a skill:
+### `vendor_tools/<vendor>_tools.md`
 
+A markdown file listing every tool exposed by the MCP server with its full description. Useful as a reference when writing prompts or configuring agent context.
+
+### `skills/<vendor>-tools/SKILL.md`
+
+An auto-generated OpenCode skill file that contains the same tool instructions in a format OpenCode can load automatically. The skill includes a frontmatter `name` and `description` that OpenCode uses for automatic skill matching.
+
+To use the generated skill with OpenCode:
+
+1. Copy the skill directory into your OpenCode skills location:
+
+   ```bash
+   cp -r skills/figma-tools ~/.config/opencode/skills/figma-tools
+   ```
+
+2. OpenCode scans `~/.config/opencode/skills/` (and project-level `.opencode/skills/`) for skills and loads them automatically when the `description` matches the task at hand.
+
+Alternatively, symlink it:
+
+```bash
+ln -sf "$(pwd)/skills/figma-tools" ~/.config/opencode/skills/figma-tools
 ```
-.opencode/skills/figma-vendor/SKILL.md
-```
-
-```markdown
----
-name: figma-vendor
-description: Use when working with Figma MCP tools including get_screenshot, get_design_context, use_figma, generate_figma_design, get_metadata, get_figjam, search_design_system, get_libraries, and other Figma design-to-code or FigJam tools.
----
-
-[Copy the contents of vendor_instructions/figma_instructions.md here]
-```
-
-opencode scans `.opencode/skills/` for skills and loads them automatically based on the `description` matching the task at hand, so the agent gets the right instructions when working with Figma.
 
 ## Supported MCP Servers
 
 Tested and working with:
+
 - Figma MCP
 
 Can authenticate with any MCP server that supports OAuth 2.0 authorization code flow.
