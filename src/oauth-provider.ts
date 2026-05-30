@@ -1,11 +1,11 @@
 import { spawnSync } from "node:child_process";
-import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
+import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth";
 import type {
   OAuthClientInformationMixed,
   OAuthClientMetadata,
   OAuthTokens,
-} from "@modelcontextprotocol/sdk/shared/auth.js";
-import { AuthStorage } from "./storage.js";
+} from "@modelcontextprotocol/sdk/shared/auth";
+import { AuthStorage } from "./storage";
 
 const OAUTH_CALLBACK_PATH = "/callback";
 

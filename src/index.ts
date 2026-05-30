@@ -3,7 +3,7 @@ import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import express from "express";
-import { type McpOAuthConfig, McpOAuthProvider } from "./oauth-provider.js";
+import { type McpOAuthConfig, McpOAuthProvider } from "./oauth-provider";
 
 const CALLBACK_PORT = 3000;
 const OAUTH_CALLBACK_PATH = "/callback";
