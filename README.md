@@ -39,7 +39,21 @@ Authentication state is stored in `mcp-auth.json` at the project root, containin
 - Access and refresh tokens
 - Token expiration timestamps
 
-Move or merge this file to `~/.local/share/opencode/mcp-auth.json` for use with OpenCode or other MCP clients.
+### Syncing with OpenCode
+
+Use the built-in sync script to copy or merge credentials into OpenCode's global location (`~/.local/share/opencode/mcp-auth.json` on macOS/Linux, `%APPDATA%\opencode\mcp-auth.json` on Windows):
+
+```bash
+npm run sync-auth
+```
+
+This will:
+
+- Create the destination directory if it doesn't exist
+- **Copy** the file if no global credentials exist yet
+- **Deep-merge** credentials if global credentials already exist (existing entries are preserved, new entries are added, and overlapping keys are overwritten by the local file)
+- Detect your platform and set the correct paths automatically
+- Prompt for elevated privileges (`sudo`) if permission is denied
 
 ## Generated outputs
 
