@@ -2,7 +2,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import type {
   OAuthClientInformationMixed,
   OAuthTokens,
-} from "@modelcontextprotocol/sdk/shared/auth";
+} from "@modelcontextprotocol/sdk/shared/auth.js";
 
 const AUTH_FILE = "mcp-auth.json";
 

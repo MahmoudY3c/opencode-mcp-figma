@@ -4,6 +4,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import express from "express";
 import { type McpOAuthConfig, McpOAuthProvider } from "./oauth-provider";
+import { askClientInfo, askMcpServerUrl } from "./utils/prompts.utils";
 
 const CALLBACK_PORT = 3000;
 const OAUTH_CALLBACK_PATH = "/callback";
@@ -47,16 +48,25 @@ async function startCallbackServer(
 }
 
 async function connectWithAuth(
-  mcpServerUrl: string,
   provider: McpOAuthProvider,
+  clientInfo: {
+    mcpServerUrl: string;
+    mcpClientName?: string;
+    mcpClientVersion?: string;
+  },
 ): Promise<Client> {
+  const {
+    mcpServerUrl,
+    mcpClientName = "Codex",
+    mcpClientVersion = "1.0.0",
+  } = clientInfo;
   const url = new URL(mcpServerUrl);
   const transport = new StreamableHTTPClientTransport(url, {
     authProvider: provider,
   });
 
   const client = new Client(
-    { name: "Codex", version: "1.0.0" },
+    { name: mcpClientName, version: mcpClientVersion },
     { capabilities: {} },
   );
 
@@ -80,7 +90,7 @@ async function connectWithAuth(
         authProvider: provider,
       });
       const retryClient = new Client(
-        { name: "Codex", version: "1.0.0" },
+        { name: mcpClientName, version: mcpClientVersion },
         { capabilities: {} },
       );
       await retryClient.connect(retryTransport);
@@ -92,7 +102,8 @@ async function connectWithAuth(
 }
 
 async function main() {
-  const mcpServerUrl = process.argv[2];
+  const mcpServerUrl = await askMcpServerUrl();
+  const { mcpClientName, mcpClientVersion } = await askClientInfo();
   if (!mcpServerUrl) {
     console.error("Usage: ts-node src/index.ts <mcp-server-url>");
     console.error("  Example: ts-node src/index.ts https://example.com/mcp");
@@ -111,7 +122,11 @@ async function main() {
 
   let client: Client | undefined;
   try {
-    client = await connectWithAuth(mcpServerUrl, provider);
+    client = await connectWithAuth(provider, {
+      mcpServerUrl,
+      mcpClientName,
+      mcpClientVersion,
+    });
 
     // List available tools as a smoke-test
     console.log("\n[MCP] Listing available tools...");

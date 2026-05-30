@@ -1,24 +1,48 @@
-# Log into figma MCP
+# MCP OAuth Authentication
 
 ## What is it for?
 
-Figma MCP rejects non-whitelisted agents, including OpenCode.
-This almost no-dependncy code allows to authenticate and create the mcp-auth.json file.
+This tool handles OAuth authentication for Model Context Protocol (MCP) servers. It manages the OAuth flow, handles authorization callbacks, stores credentials securely, and verifies successful connection by listing available tools.
 
-For context and alternatives, see https://github.com/anomalyco/opencode/issues/988
+## How it works
 
-## Authenticating
+1. Starts a local HTTP server to receive OAuth callbacks
+2. Initiates OAuth flow with the specified MCP server
+3. Handles authorization code exchange and token management
+4. Saves authentication credentials to `mcp-auth.json`
+5. Lists available tools to verify the connection
+
+## Getting started
 
 ```bash
-npm i
-npm run build
-npm start https://mcp.figma.com/mcp
+npm install
+npm run dev
 ```
 
-## Add to MCP
+You'll be prompted to enter:
+- **MCP Server URL**: The OAuth endpoint (e.g., `https://mcp.figma.com/mcp`)
+- **Client Name**: Optional custom client name (defaults to "Codex")
+- **Client Version**: Optional custom client version (defaults to "1.0.0")
 
-Then move or merge mcp-auth.json into ~/.local/share/opencode/mcp-auth.json
+## Production build
 
-## Other MCPs?
+```bash
+npm run build
+npm start
+```
 
-This was only tested with Figma.
+## Credentials
+
+The tool generates an `mcp-auth.json` file containing:
+- OAuth client information (ID, secret)
+- Access and refresh tokens
+- Token expiration timestamps
+
+Move or merge this file to `~/.local/share/opencode/mcp-auth.json` for use with OpenCode or other MCP clients.
+
+## Supported MCP Servers
+
+Tested and working with:
+- Figma MCP
+
+Can authenticate with any MCP server that supports OAuth 2.0 authorization code flow.
