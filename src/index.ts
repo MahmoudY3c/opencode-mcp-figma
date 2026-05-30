@@ -1,14 +1,16 @@
 import { createServer, type Server } from "node:http";
-import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth";
+import { Client } from "@modelcontextprotocol/sdk/client/index";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp";
 import express from "express";
 import { type McpOAuthConfig, McpOAuthProvider } from "./oauth-provider";
 
 const CALLBACK_PORT = 3000;
 const OAUTH_CALLBACK_PATH = "/callback";
 
-async function startCallbackServer(provider: McpOAuthProvider): Promise<Server> {
+async function startCallbackServer(
+  provider: McpOAuthProvider,
+): Promise<Server> {
   const app = express();
 
   app.get(OAUTH_CALLBACK_PATH, (req, res) => {
@@ -26,7 +28,9 @@ async function startCallbackServer(provider: McpOAuthProvider): Promise<Server> 
       return;
     }
 
-    res.send("<h1>Authorization successful!</h1><p>You can close this tab and return to the terminal.</p>");
+    res.send(
+      "<h1>Authorization successful!</h1><p>You can close this tab and return to the terminal.</p>",
+    );
 
     provider.receiveAuthorizationCode(code);
   });
@@ -34,19 +38,27 @@ async function startCallbackServer(provider: McpOAuthProvider): Promise<Server> 
   return new Promise((resolve) => {
     const server = createServer(app);
     server.listen(CALLBACK_PORT, () => {
-      console.log(`[OAuth] Callback server listening on http://localhost:${CALLBACK_PORT}`);
+      console.log(
+        `[OAuth] Callback server listening on http://localhost:${CALLBACK_PORT}`,
+      );
       resolve(server);
     });
   });
 }
 
-async function connectWithAuth(mcpServerUrl: string, provider: McpOAuthProvider): Promise<Client> {
+async function connectWithAuth(
+  mcpServerUrl: string,
+  provider: McpOAuthProvider,
+): Promise<Client> {
   const url = new URL(mcpServerUrl);
   const transport = new StreamableHTTPClientTransport(url, {
     authProvider: provider,
   });
 
-  const client = new Client({ name: "Codex", version: "1.0.0" }, { capabilities: {} });
+  const client = new Client(
+    { name: "Codex", version: "1.0.0" },
+    { capabilities: {} },
+  );
 
   try {
     await client.connect(transport);
@@ -67,7 +79,10 @@ async function connectWithAuth(mcpServerUrl: string, provider: McpOAuthProvider)
       const retryTransport = new StreamableHTTPClientTransport(url, {
         authProvider: provider,
       });
-      const retryClient = new Client({ name: "Codex", version: "1.0.0" }, { capabilities: {} });
+      const retryClient = new Client(
+        { name: "Codex", version: "1.0.0" },
+        { capabilities: {} },
+      );
       await retryClient.connect(retryTransport);
       console.log("[MCP] Connected successfully.");
       return retryClient;
@@ -106,7 +121,9 @@ async function main() {
     } else {
       console.log("[MCP] Available tools:");
       for (const tool of tools.tools) {
-        console.log(`  - ${tool.name}: ${tool.description ?? "(no description)"}`);
+        console.log(
+          `  - ${tool.name}: ${tool.description ?? "(no description)"}`,
+        );
       }
     }
   } finally {

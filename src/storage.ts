@@ -1,5 +1,8 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import type { OAuthClientInformationMixed, OAuthTokens } from "@modelcontextprotocol/sdk/shared/auth.js";
+import type {
+  OAuthClientInformationMixed,
+  OAuthTokens,
+} from "@modelcontextprotocol/sdk/shared/auth";
 
 const AUTH_FILE = "mcp-auth.json";
 
@@ -84,9 +87,15 @@ export class AuthStorage {
     if (!info?.clientId) return undefined;
     return {
       client_id: info.clientId,
-      ...(info.clientSecret !== undefined && { client_secret: info.clientSecret }),
-      ...(info.clientIdIssuedAt !== undefined && { client_id_issued_at: info.clientIdIssuedAt }),
-      ...(info.clientSecretExpiresAt !== undefined && { client_secret_expires_at: info.clientSecretExpiresAt }),
+      ...(info.clientSecret !== undefined && {
+        client_secret: info.clientSecret,
+      }),
+      ...(info.clientIdIssuedAt !== undefined && {
+        client_id_issued_at: info.clientIdIssuedAt,
+      }),
+      ...(info.clientSecretExpiresAt !== undefined && {
+        client_secret_expires_at: info.clientSecretExpiresAt,
+      }),
     };
   }
 
@@ -96,11 +105,18 @@ export class AuthStorage {
     entry.serverUrl = this.serverUrl;
     entry.clientInfo = {
       clientId: info.client_id,
-      ...("client_secret" in info && info.client_secret !== undefined && { clientSecret: info.client_secret }),
+      ...("client_secret" in info &&
+        info.client_secret !== undefined && {
+          clientSecret: info.client_secret,
+        }),
       ...("client_id_issued_at" in info &&
-        info.client_id_issued_at !== undefined && { clientIdIssuedAt: info.client_id_issued_at }),
+        info.client_id_issued_at !== undefined && {
+          clientIdIssuedAt: info.client_id_issued_at,
+        }),
       ...("client_secret_expires_at" in info &&
-        info.client_secret_expires_at !== undefined && { clientSecretExpiresAt: info.client_secret_expires_at }),
+        info.client_secret_expires_at !== undefined && {
+          clientSecretExpiresAt: info.client_secret_expires_at,
+        }),
     };
     data[this.key] = entry;
     writeFile(data);
@@ -114,8 +130,12 @@ export class AuthStorage {
     return {
       access_token: stored.accessToken,
       token_type: "bearer",
-      ...(stored.refreshToken !== undefined && { refresh_token: stored.refreshToken }),
-      ...(stored.expiresAt !== undefined && { expires_in: Math.max(0, Math.round(stored.expiresAt - now)) }),
+      ...(stored.refreshToken !== undefined && {
+        refresh_token: stored.refreshToken,
+      }),
+      ...(stored.expiresAt !== undefined && {
+        expires_in: Math.max(0, Math.round(stored.expiresAt - now)),
+      }),
     };
   }
 
@@ -126,8 +146,12 @@ export class AuthStorage {
     const now = Date.now() / 1000;
     const stored: StoredTokens = {
       accessToken: tokens.access_token,
-      ...(tokens.refresh_token !== undefined && { refreshToken: tokens.refresh_token }),
-      ...(tokens.expires_in !== undefined && { expiresAt: now + tokens.expires_in }),
+      ...(tokens.refresh_token !== undefined && {
+        refreshToken: tokens.refresh_token,
+      }),
+      ...(tokens.expires_in !== undefined && {
+        expiresAt: now + tokens.expires_in,
+      }),
     };
     entry.tokens = stored;
     data[this.key] = entry;

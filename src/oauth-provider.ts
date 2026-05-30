@@ -66,7 +66,9 @@ export class McpOAuthProvider implements OAuthClientProvider {
 
   redirectToAuthorization(authorizationUrl: URL): void {
     const url = authorizationUrl.toString();
-    console.log(`\n[OAuth] Opening authorization URL in your browser:\n  ${url}\n`);
+    console.log(
+      `\n[OAuth] Opening authorization URL in your browser:\n  ${url}\n`,
+    );
     spawnSync("xdg-open", [url], { stdio: "ignore" });
   }
 
