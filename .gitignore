@@ -1,3 +1,5 @@
 mcp-auth.json
 node_modules
 dist
+vendor_tools
+skills
