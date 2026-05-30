@@ -2,51 +2,37 @@ import { createServer, type Server } from "node:http";
 import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import express from "express";
 import { type McpOAuthConfig, McpOAuthProvider } from "./oauth-provider";
+import { app } from "./app";
+import { createProvider, getProvider } from "./utils/provider.utils";
+import { checkPlatformSupport, checkRoot } from "./utils/sudo.utils";
 
 const CALLBACK_PORT = 3000;
-const OAUTH_CALLBACK_PATH = "/callback";
 
-async function startCallbackServer(provider: McpOAuthProvider): Promise<Server> {
-  const app = express();
-
-  app.get(OAUTH_CALLBACK_PATH, (req, res) => {
-    const code = req.query.code as string | undefined;
-    const error = req.query.error as string | undefined;
-
-    if (error) {
-      res.status(400).send(`<h1>Authorization failed</h1><p>${error}</p>`);
-      console.error(`[OAuth] Authorization error: ${error}`);
-      return;
-    }
-
-    if (!code) {
-      res.status(400).send("<h1>Missing authorization code</h1>");
-      return;
-    }
-
-    res.send("<h1>Authorization successful!</h1><p>You can close this tab and return to the terminal.</p>");
-
-    provider.receiveAuthorizationCode(code);
+async function startCallbackServer() {
+  const server = createServer(app);
+  server.listen(CALLBACK_PORT, () => {
+    console.log(
+      `[OAuth] Callback server listening on http://localhost:${CALLBACK_PORT}`,
+    );
   });
 
-  return new Promise((resolve) => {
-    const server = createServer(app);
-    server.listen(CALLBACK_PORT, () => {
-      console.log(`[OAuth] Callback server listening on http://localhost:${CALLBACK_PORT}`);
-      resolve(server);
-    });
-  });
+  return server;
 }
 
-async function connectWithAuth(mcpServerUrl: string, provider: McpOAuthProvider): Promise<Client> {
+async function connectWithAuth(
+  mcpServerUrl: string,
+  provider: McpOAuthProvider,
+): Promise<Client> {
   const url = new URL(mcpServerUrl);
   const transport = new StreamableHTTPClientTransport(url, {
     authProvider: provider,
   });
 
-  const client = new Client({ name: "Codex", version: "1.0.0" }, { capabilities: {} });
+  const client = new Client(
+    { name: "Codex", version: "1.0.0" },
+    { capabilities: {} },
+  );
 
   try {
     await client.connect(transport);
@@ -67,7 +53,10 @@ async function connectWithAuth(mcpServerUrl: string, provider: McpOAuthProvider)
       const retryTransport = new StreamableHTTPClientTransport(url, {
         authProvider: provider,
       });
-      const retryClient = new Client({ name: "Codex", version: "1.0.0" }, { capabilities: {} });
+      const retryClient = new Client(
+        { name: "Codex", version: "1.0.0" },
+        { capabilities: {} },
+      );
       await retryClient.connect(retryTransport);
       console.log("[MCP] Connected successfully.");
       return retryClient;
@@ -77,6 +66,10 @@ async function connectWithAuth(mcpServerUrl: string, provider: McpOAuthProvider)
 }
 
 async function main() {
+  checkPlatformSupport();
+  // check if running as admin/root and exit with an error, to auto update opencode mcp-auth.json and add new auth data
+  checkRoot();
+
   const mcpServerUrl = process.argv[2];
   if (!mcpServerUrl) {
     console.error("Usage: ts-node src/index.ts <mcp-server-url>");
@@ -84,15 +77,10 @@ async function main() {
     process.exit(1);
   }
 
-  const config: McpOAuthConfig = {
-    serverUrl: mcpServerUrl,
-    callbackPort: CALLBACK_PORT,
-  };
-
-  const provider = new McpOAuthProvider(config);
+  const provider = await getProvider(mcpServerUrl, CALLBACK_PORT);
 
   // Start the local HTTP server to receive the OAuth callback
-  const callbackServer = await startCallbackServer(provider);
+  const callbackServer = await startCallbackServer();
 
   let client: Client | undefined;
   try {
@@ -106,7 +94,9 @@ async function main() {
     } else {
       console.log("[MCP] Available tools:");
       for (const tool of tools.tools) {
-        console.log(`  - ${tool.name}: ${tool.description ?? "(no description)"}`);
+        console.log(
+          `  - ${tool.name}: ${tool.description ?? "(no description)"}`,
+        );
       }
     }
   } finally {

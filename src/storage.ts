@@ -1,71 +1,17 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import type { OAuthClientInformationMixed, OAuthTokens } from "@modelcontextprotocol/sdk/shared/auth.js";
-
-const AUTH_FILE = "mcp-auth.json";
-
-/** Shape as stored in mcp-auth.json (camelCase, matching the file format). */
-export interface StoredClientInfo {
-  clientId?: string;
-  clientSecret?: string;
-  clientIdIssuedAt?: number;
-  clientSecretExpiresAt?: number;
-}
-
-/** Tokens as stored in mcp-auth.json (camelCase keys, expiresAt as absolute timestamp). */
-export interface StoredTokens {
-  accessToken: string;
-  refreshToken?: string;
-  /** Absolute Unix timestamp (seconds) when the access token expires. */
-  expiresAt?: number;
-}
-
-export interface ServerAuthEntry {
-  clientInfo?: StoredClientInfo;
-  serverUrl?: string;
-  tokens?: StoredTokens;
-}
-
-export interface ServerStateEntry {
-  oauthState?: string;
-  codeVerifier?: string;
-}
-
-type AuthFileContents = Record<string, ServerAuthEntry | ServerStateEntry>;
-
-function readFile(): AuthFileContents {
-  if (!existsSync(AUTH_FILE)) return {};
-  try {
-    return JSON.parse(readFileSync(AUTH_FILE, "utf-8")) as AuthFileContents;
-  } catch {
-    return {};
-  }
-}
-
-function writeFile(contents: AuthFileContents): void {
-  writeFileSync(AUTH_FILE, `${JSON.stringify(contents, null, 2)}\n`, "utf-8");
-}
-
-/**
- * Derives a stable lowercase key from a server URL hostname.
- * e.g. "https://mcp.figma.com/mcp" -> "figma"
- */
-export function serverKey(serverUrl: string): string {
-  try {
-    const host = new URL(serverUrl).hostname; // e.g. "mcp.figma.com"
-    const parts = host.replace(/^www\./, "").split(".");
-    // Second-to-last part is the SLD, e.g. "figma" from "mcp.figma.com"
-    return parts.length >= 2 ? parts[parts.length - 2] : parts[0];
-  } catch {
-    return serverUrl;
-  }
-}
-
-/**
- * Title-case version of the key, used for the state entry in mcp-auth.json.
- */
-function stateKey(key: string): string {
-  return key.charAt(0).toUpperCase() + key.slice(1);
-}
+import type {
+  OAuthClientInformationMixed,
+  OAuthTokens,
+} from "@modelcontextprotocol/sdk/shared/auth.js";
+import {
+  readFile,
+  ServerAuthEntry,
+  serverKey,
+  ServerStateEntry,
+  stateKey,
+  StoredTokens,
+  writeFile,
+} from "./utils/mcp-auth.utils";
 
 export class AuthStorage {
   private readonly key: string;
@@ -84,9 +30,15 @@ export class AuthStorage {
     if (!info?.clientId) return undefined;
     return {
       client_id: info.clientId,
-      ...(info.clientSecret !== undefined && { client_secret: info.clientSecret }),
-      ...(info.clientIdIssuedAt !== undefined && { client_id_issued_at: info.clientIdIssuedAt }),
-      ...(info.clientSecretExpiresAt !== undefined && { client_secret_expires_at: info.clientSecretExpiresAt }),
+      ...(info.clientSecret !== undefined && {
+        client_secret: info.clientSecret,
+      }),
+      ...(info.clientIdIssuedAt !== undefined && {
+        client_id_issued_at: info.clientIdIssuedAt,
+      }),
+      ...(info.clientSecretExpiresAt !== undefined && {
+        client_secret_expires_at: info.clientSecretExpiresAt,
+      }),
     };
   }
 
@@ -96,11 +48,18 @@ export class AuthStorage {
     entry.serverUrl = this.serverUrl;
     entry.clientInfo = {
       clientId: info.client_id,
-      ...("client_secret" in info && info.client_secret !== undefined && { clientSecret: info.client_secret }),
+      ...("client_secret" in info &&
+        info.client_secret !== undefined && {
+          clientSecret: info.client_secret,
+        }),
       ...("client_id_issued_at" in info &&
-        info.client_id_issued_at !== undefined && { clientIdIssuedAt: info.client_id_issued_at }),
+        info.client_id_issued_at !== undefined && {
+          clientIdIssuedAt: info.client_id_issued_at,
+        }),
       ...("client_secret_expires_at" in info &&
-        info.client_secret_expires_at !== undefined && { clientSecretExpiresAt: info.client_secret_expires_at }),
+        info.client_secret_expires_at !== undefined && {
+          clientSecretExpiresAt: info.client_secret_expires_at,
+        }),
     };
     data[this.key] = entry;
     writeFile(data);
@@ -114,8 +73,12 @@ export class AuthStorage {
     return {
       access_token: stored.accessToken,
       token_type: "bearer",
-      ...(stored.refreshToken !== undefined && { refresh_token: stored.refreshToken }),
-      ...(stored.expiresAt !== undefined && { expires_in: Math.max(0, Math.round(stored.expiresAt - now)) }),
+      ...(stored.refreshToken !== undefined && {
+        refresh_token: stored.refreshToken,
+      }),
+      ...(stored.expiresAt !== undefined && {
+        expires_in: Math.max(0, Math.round(stored.expiresAt - now)),
+      }),
     };
   }
 
@@ -126,8 +89,12 @@ export class AuthStorage {
     const now = Date.now() / 1000;
     const stored: StoredTokens = {
       accessToken: tokens.access_token,
-      ...(tokens.refresh_token !== undefined && { refreshToken: tokens.refresh_token }),
-      ...(tokens.expires_in !== undefined && { expiresAt: now + tokens.expires_in }),
+      ...(tokens.refresh_token !== undefined && {
+        refreshToken: tokens.refresh_token,
+      }),
+      ...(tokens.expires_in !== undefined && {
+        expiresAt: now + tokens.expires_in,
+      }),
     };
     entry.tokens = stored;
     data[this.key] = entry;
