@@ -1,7 +1,7 @@
 import { createServer, type Server } from "node:http";
-import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth";
-import { Client } from "@modelcontextprotocol/sdk/client/index";
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp";
+import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import express from "express";
 import { type McpOAuthConfig, McpOAuthProvider } from "./oauth-provider";
 
